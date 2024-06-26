@@ -17,6 +17,9 @@ func startTaskBot(ctx context.Context) error {
 }
 
 func main() {
+	configPath := flag.String("c", "./cmd/go-telegram-bot-example/config.yaml", "path to go-telegram-bot-example config")
+	flag.Parse()
+
 	err := startTaskBot(context.Background())
 	if err != nil {
 		panic(err)
