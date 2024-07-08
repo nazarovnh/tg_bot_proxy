@@ -1,27 +1,39 @@
 package main
 
 import (
-	"context"
-	"os"
+	"flag"
+	"fmt"
+
+	"tg_bot_proxy/internal/config"
+	"tg_bot_proxy/internal/logger"
+
+	// "github.com/golang-migrate/migrate/v4/database"
+	"go.uber.org/zap"
 )
 
-var (
-	BotToken = os.Getenv("BotToken")
-
-	WebhookURL = "https://525f2cb5.ngrok.io"
-)
-
-func startTaskBot(ctx context.Context) error {
-	// сюда пишите ваш код
-	return nil
-}
 
 func main() {
 	configPath := flag.String("c", "./cmd/go-telegram-bot-example/config.yaml", "path to go-telegram-bot-example config")
 	flag.Parse()
 
-	err := startTaskBot(context.Background())
+	logger, err := logger.GetLogger()
+
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed setting up logger: %s", err.Error()))
 	}
+
+	cfg := config.Config{}
+	err = config.GetConfig(*configPath, cfg)
+	if err != nil {
+		panic(fmt.Sprint("failed get configuration", zap.String("reason", err.Error())))
+	}
+	logger.Info("configured", zap.Any("config", cfg))
+
+	db, err := database.NewPostgresDB(cfg.Database)
+	if err != nil {
+		panic(fmt.Sprint("failed connect to DB", zap.String("reason", err.Error())))
+
+	}
+	logger.Info("success connected to database")
+	repo := repository.Init(db)
 }
