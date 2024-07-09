@@ -1,18 +1,32 @@
 package bot
 
 import (
+	"net/http"
+	"tg_bot_proxy/internal/config"
+	"tg_bot_proxy/internal/repository"
+
+	"github.com/eikoshelev/go-telegram-bot-example/internal/service"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
 )
 
 type Bot struct {
 	API *tgbotapi.BotAPI
 	Logger     *zap.Logger
+	Config     *config.Config
+	Service    *service.Service
+	Repository *repository.Repository
 }
 
 
-func (b *Bot) Init() *Bot {
-	return &Bot{}
+func Init(config *config.Config, logger *zap.Logger, service *service.Service, repository *repository.Repository) *Bot {
+	return &Bot{
+		Config:     config,
+		Logger:     logger,
+		Service:    service,
+		Repository: repository,
+	}
 }
 
 func (b *Bot) Run() {
@@ -25,10 +39,18 @@ func (b *Bot) Run() {
 	if err := b.SetWebhook(); err != nil {
 		b.Logger.Fatal("failed set webhook", zap.String("error", err.Error()))
 	}
+
+	go b.StartServer()
+	b.Logger.Info("http webhook server started")
+
+	updates := b.API.ListenForWebhook("/")
+	for update := range updates {
+		go b.HandleUpdate(update)
+	}
 }
 
 func (b *Bot) NewBotAPI() (*tgbotapi.BotAPI, error) {
-	botAPI, err := tgbotapi.NewBotAPI(b.Config.Token)
+	botAPI, err := tgbotapi.NewBotAPI(b.Config.Bot.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -54,4 +76,11 @@ func (b *Bot) SetWebhook() error {
 		return err
 	}
 	return nil
+}
+
+func (b *Bot) StartServer(){
+	addr := b.Config.Server.Host+b.Config.Server.Port
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		b.Logger.Fatal("failed start http server", zap.String("error", err.Error()))
+	}
 }

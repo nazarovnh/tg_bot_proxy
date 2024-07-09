@@ -5,7 +5,10 @@ import (
 	"fmt"
 
 	"tg_bot_proxy/internal/config"
+	"tg_bot_proxy/internal/database"
 	"tg_bot_proxy/internal/logger"
+	"tg_bot_proxy/internal/repository"
+	"tg_bot_proxy/internal/service"
 
 	// "github.com/golang-migrate/migrate/v4/database"
 	"go.uber.org/zap"
@@ -30,10 +33,14 @@ func main() {
 	logger.Info("configured", zap.Any("config", cfg))
 
 	db, err := database.NewPostgresDB(cfg.Database)
+	// defer db.Close()
 	if err != nil {
 		panic(fmt.Sprint("failed connect to DB", zap.String("reason", err.Error())))
 
 	}
 	logger.Info("success connected to database")
 	repo := repository.Init(db)
+	svc := service.Init(repo)
+	// TODO(): create flow like state machine using map
+
 }
