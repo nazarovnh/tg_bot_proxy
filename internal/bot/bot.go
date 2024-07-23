@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"tg_bot_proxy/internal/config"
 	"tg_bot_proxy/internal/repository"
+	"tg_bot_proxy/internal/service"
 
-	"github.com/eikoshelev/go-telegram-bot-example/internal/service"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
 )
 

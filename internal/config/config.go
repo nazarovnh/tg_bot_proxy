@@ -24,14 +24,15 @@ type Config struct {
 	// Migration database.MigrationConfig `yaml:"migration"`
 }
 
-func GetConfig(configPath string, cfg Config) error {
+
+func GetConfig(configPath string, cfg interface{}) error {
 	data, err := os.ReadFile(configPath)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	err = yaml.Unmarshal(data, cfg)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
